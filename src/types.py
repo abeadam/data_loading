@@ -1,5 +1,5 @@
 """All dataclasses for the data loading pipeline. No logic, no imports from other src/ modules."""
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import date, datetime
 from pathlib import Path
 

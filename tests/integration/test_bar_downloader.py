@@ -4,8 +4,6 @@ from pathlib import Path
 
 import pytest
 
-from src.config_loader import load_config
-from src.file_writer import day_file_path, file_exists
 from src.types import InstrumentConfig
 
 SPY_INSTRUMENT = InstrumentConfig(symbol="SPY", sec_type="STK", exchange="SMART", currency="USD")
@@ -130,3 +128,31 @@ def test_invalid_symbol_produces_failed_result_without_abort(tmp_data_dir):
 
     assert any(r.success for r in spy_results), "SPY should have at least one success"
     assert any(not r.success for r in bad_results), "ZZZBAD should have at least one failure"
+
+
+@pytest.mark.integration
+def test_es_futures_download_uses_correct_contract_month():
+    """Download ES for a specific historical date and verify the contract month is correct."""
+    from src.bar_downloader import download_day
+    from src.contract_resolver import get_active_es_contract_month
+    from src.ibkr_client import connect_to_ibkr, disconnect
+
+    # Use a known historical date well within the IBKR lookback window
+    target_date = date.today() - timedelta(days=30)
+    if target_date.weekday() >= 5:
+        target_date -= timedelta(days=target_date.weekday() - 4)
+
+    expected_month = get_active_es_contract_month(target_date)
+
+    es_instrument = InstrumentConfig(symbol="ES", sec_type="CONTFUT", exchange="CME", currency="USD")
+
+    client = connect_to_ibkr("127.0.0.1", 7497)
+    try:
+        daily_bars = download_day(client, es_instrument, target_date)
+    finally:
+        disconnect(client)
+
+    assert daily_bars is not None, f"No bars returned for ES on {target_date}"
+    assert daily_bars.symbol == "ES"
+    assert daily_bars.bar_count >= 1
+    print(f"ES {target_date}: {daily_bars.bar_count} bars, contract month {expected_month}")

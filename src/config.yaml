@@ -25,6 +25,6 @@ instruments:
     currency: USD
 
 news:
-  provider_codes: "BZ"
+  provider_codes: "BZ+DJNL+BRFUPDN+BRFG"
   spy_symbol: SPY
   sentiment_backend: finbert  # or "vader" for faster, smaller install

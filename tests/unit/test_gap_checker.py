@@ -1,7 +1,6 @@
 """Tests for src/gap_checker.py — pure function, no IBKR, no file I/O."""
 from datetime import date
 
-import pytest
 
 
 def make_bars(count: int, start_timestamp: int = 1704196200, interval: int = 5):
@@ -99,7 +98,7 @@ class TestSingleGap:
 class TestMultipleGaps:
     def test_two_gaps(self):
         from src.gap_checker import check_gaps
-        from src.types import Bar, DailyBars
+        from src.types import DailyBars
 
         start = 1704196200
         # Segments: 100 bars, gap, 100 bars, gap, 4480 bars

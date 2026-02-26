@@ -83,14 +83,14 @@ Re-run — verify no files are modified.
 
 ### Tests for User Story 2 ⚠️ Write and verify FAIL before implementing
 
-- [ ] T019 [P] [US2] Write tests for futures contract resolution in `tests/unit/test_contract_resolver.py`: get_active_es_contract_month for dates in each quarter (e.g., 2024-01-15 → "202403", 2024-03-17 (after 3rd Friday) → "202406"); get_active_vxm_contract_month for dates mid-month and post-3rd-Wednesday; resolve_contract with CONTFUT ES → secType="FUT", lastTradeDateOrContractMonth set, includeExpired=True; same for VXM
+- [x] T019 [P] [US2] Write tests for futures contract resolution in `tests/unit/test_contract_resolver.py`: get_active_es_contract_month for dates in each quarter (e.g., 2024-01-15 → "202403", 2024-03-17 (after 3rd Friday) → "202406"); get_active_vxm_contract_month for dates mid-month and post-3rd-Wednesday; resolve_contract with CONTFUT ES → secType="FUT", lastTradeDateOrContractMonth set, includeExpired=True; same for VXM
 
 ### Implementation for User Story 2
 
-- [ ] T020 [US2] Implement get_active_es_contract_month(target_date) and get_active_vxm_contract_month(target_date) in `src/contract_resolver.py` using get_third_friday() and get_third_wednesday() helpers; match reference code logic exactly
-- [ ] T021 [US2] Extend resolve_contract() in `src/contract_resolver.py` to handle CONTFUT: set secType="FUT", lastTradeDateOrContractMonth via get_active_es/vxm_contract_month(), includeExpired=True; remove NotImplementedError stubs
-- [ ] T022 [US2] Verify run_download() in `src/downloader.py` handles CONTFUT instruments without changes (contract resolution is in contract_resolver); confirm ES and VXM download correctly end-to-end
-- [ ] T023 [US2] Write integration test for ES futures download in `tests/integration/test_bar_downloader.py` (@pytest.mark.integration): download ES for a specific historical date, verify contract month matches expected expiry, verify bars returned
+- [x] T020 [US2] Implement get_active_es_contract_month(target_date) and get_active_vxm_contract_month(target_date) in `src/contract_resolver.py` using get_third_friday() and get_third_wednesday() helpers; match reference code logic exactly
+- [x] T021 [US2] Extend resolve_contract() in `src/contract_resolver.py` to handle CONTFUT: set secType="FUT", lastTradeDateOrContractMonth via get_active_es/vxm_contract_month(), includeExpired=True; remove NotImplementedError stubs
+- [x] T022 [US2] Verify run_download() in `src/downloader.py` handles CONTFUT instruments without changes (contract resolution is in contract_resolver); confirm ES and VXM download correctly end-to-end
+- [x] T023 [US2] Write integration test for ES futures download in `tests/integration/test_bar_downloader.py` (@pytest.mark.integration): download ES for a specific historical date, verify contract month matches expected expiry, verify bars returned
 
 **Checkpoint**: `python -m src.downloader` downloads ES and VXM correctly; each day uses the right expiry contract; files appear in `data/bars/ES/` and `data/bars/VXM/`.
 
@@ -107,9 +107,9 @@ downloaded and the invalid one is logged as failed.
 
 ### Implementation for User Story 3
 
-- [ ] T024 [US3] Verify run_download() in `src/downloader.py` already iterates all instruments from AppConfig.instruments (should be true from T017); if not, extend to loop over all; confirm DayDownloadResult is recorded per (symbol, date) pair
-- [ ] T025 [US3] Add partial-failure handling in run_download() in `src/downloader.py`: catch all exceptions per (symbol, date) pair, record error_message in DayDownloadResult, continue to next instrument; print summary at end: N files downloaded, M skipped, K failed
-- [ ] T026 [US3] Write integration test for batch download in `tests/integration/test_bar_downloader.py` (@pytest.mark.integration): configure 3 instruments, run download, verify 3 × N day files created; include one invalid symbol, verify it produces failed DayDownloadResult without aborting others
+- [x] T024 [US3] Verify run_download() in `src/downloader.py` already iterates all instruments from AppConfig.instruments (should be true from T017); if not, extend to loop over all; confirm DayDownloadResult is recorded per (symbol, date) pair
+- [x] T025 [US3] Add partial-failure handling in run_download() in `src/downloader.py`: catch all exceptions per (symbol, date) pair, record error_message in DayDownloadResult, continue to next instrument; print summary at end: N files downloaded, M skipped, K failed
+- [x] T026 [US3] Write integration test for batch download in `tests/integration/test_bar_downloader.py` (@pytest.mark.integration): configure 3 instruments, run download, verify 3 × N day files created; include one invalid symbol, verify it produces failed DayDownloadResult without aborting others
 
 **Checkpoint**: `python -m src.downloader` with full config (SPY, SPX, VIX, ES, VXM) produces files for all instruments; failures are logged but do not crash the run.
 
@@ -127,15 +127,15 @@ in [-1.0, +1.0]. Re-running skips already-processed dates.
 
 ### Tests for User Story 4 ⚠️ Write and verify FAIL before implementing
 
-- [ ] T027 [P] [US4] Write tests for `src/sentiment_analyzer.py` in `tests/unit/test_sentiment_analyzer.py`: mock finbert pipeline output → score_headlines returns floats in [-1,+1]; vader backend → compound score returned; aggregate_daily_sentiment with empty list → article_count=0, sentiment_score=0.0; aggregate with 3 items → mean of per-article scores; positive/negative/neutral counts correct
+- [x] T027 [P] [US4] Write tests for `src/sentiment_analyzer.py` in `tests/unit/test_sentiment_analyzer.py`: mock finbert pipeline output → score_headlines returns floats in [-1,+1]; vader backend → compound score returned; aggregate_daily_sentiment with empty list → article_count=0, sentiment_score=0.0; aggregate with 3 items → mean of per-article scores; positive/negative/neutral counts correct
 
 ### Implementation for User Story 4
 
-- [ ] T028 [US4] Implement `src/sentiment_analyzer.py`: load_model(backend) → model object (finbert: transformers pipeline("text-classification", model="ProsusAI/finbert", top_k=None); vader: SentimentIntensityAnalyzer()); score_headlines(model, headlines, backend) → list[float] (finbert: positive_prob - negative_prob; vader: compound); aggregate_daily_sentiment(model, backend, news_items, date) → DailySentiment
-- [ ] T029 [US4] Implement `src/news_downloader.py`: resolve_spy_con_id(client, spy_instrument) → int using fetch_historical_bars via reqContractDetails callback; download_news_for_date(client, symbol, con_id, provider_codes, target_date) → list[NewsItem]; window = midnight UTC to midnight UTC next day; return empty list if no news; raise PermissionError on error code 10276
-- [ ] T030 [US4] Add news file writers to `src/news_pipeline.py`: write_articles_json(data_dir, date, articles_with_scores) → Path; write_sentiment_csv(data_dir, date, daily_sentiment) → Path; check existence before writing (skip if already saved)
-- [ ] T031 [US4] Implement `src/news_pipeline.py`: run_news_pipeline(config): scan `{data_dir}/bars/{spy_symbol}/` for existing CSV files → date list; filter to dates without existing `*_sentiment.csv`; connect to IBKR; resolve SPY conId once; load sentiment model once; for each date: download headlines → score each article (store per-article score) → aggregate DailySentiment → save articles.json + sentiment.csv; log warning and continue if PermissionError (no subscription); add `if __name__ == "__main__":` block with --config argparse arg
-- [ ] T032 [US4] Write integration test for news download in `tests/integration/test_news_downloader.py` (@pytest.mark.integration): connect, download news for SPY for one date, verify list[NewsItem] returned, verify each item has article_id and headline
+- [x] T028 [US4] Implement `src/sentiment_analyzer.py`: load_model(backend) → model object (finbert: transformers pipeline("text-classification", model="ProsusAI/finbert", top_k=None); vader: SentimentIntensityAnalyzer()); score_headlines(model, headlines, backend) → list[float] (finbert: positive_prob - negative_prob; vader: compound); aggregate_daily_sentiment(model, backend, news_items, date) → DailySentiment
+- [x] T029 [US4] Implement `src/news_downloader.py`: resolve_spy_con_id(client, spy_instrument) → int using fetch_historical_bars via reqContractDetails callback; download_news_for_date(client, symbol, con_id, provider_codes, target_date) → list[NewsItem]; window = midnight UTC to midnight UTC next day; return empty list if no news; raise PermissionError on error code 10276
+- [x] T030 [US4] Add news file writers to `src/news_pipeline.py`: write_articles_json(data_dir, date, articles_with_scores) → Path; write_sentiment_csv(data_dir, date, daily_sentiment) → Path; check existence before writing (skip if already saved)
+- [x] T031 [US4] Implement `src/news_pipeline.py`: run_news_pipeline(config): scan `{data_dir}/bars/{spy_symbol}/` for existing CSV files → date list; filter to dates without existing `*_sentiment.csv`; connect to IBKR; resolve SPY conId once; load sentiment model once; for each date: download headlines → score each article (store per-article score) → aggregate DailySentiment → save articles.json + sentiment.csv; log warning and continue if PermissionError (no subscription); add `if __name__ == "__main__":` block with --config argparse arg
+- [x] T032 [US4] Write integration test for news download in `tests/integration/test_news_downloader.py` (@pytest.mark.integration): connect, download news for SPY for one date, verify list[NewsItem] returned, verify each item has article_id and headline
 
 **Checkpoint**: `python -m src.news_pipeline` produces `*_articles.json` with `sentiment_score` field per article and `*_sentiment.csv` per day; re-run skips existing dates.
 
@@ -151,7 +151,7 @@ passes only if ≥ 80% of eligible articles have price movement in the direction
 
 ### Implementation for User Story 5
 
-- [ ] T033 [US5] Implement `tests/research/test_spy_sentiment_response.py`: load all `*_articles.json` from `{data_dir}/news/`; for each article: skip if outside 9:30–15:59:30 ET or abs(sentiment_score) < 0.05; load SPY bar CSV for article's date; find first bar at or after article timestamp; find bar 6 positions later (30 seconds); price_change = close[+6] - close[+0]; aligned = sign(sentiment_score) == sign(price_change); compute alignment_pct; print per-article breakdown table; `assert alignment_pct >= 80.0, f"Alignment {alignment_pct:.1f}% < 80%"`; mark test @pytest.mark.research
+- [x] T033 [US5] Implement `tests/research/test_spy_sentiment_response.py`: load all `*_articles.json` from `{data_dir}/news/`; for each article: skip if outside 9:30–15:59:30 ET or abs(sentiment_score) < 0.05; load SPY bar CSV for article's date; find first bar at or after article timestamp; find bar 6 positions later (30 seconds); price_change = close[+6] - close[+0]; aligned = sign(sentiment_score) == sign(price_change); compute alignment_pct; print per-article breakdown table; `assert alignment_pct >= 80.0, f"Alignment {alignment_pct:.1f}% < 80%"`; mark test @pytest.mark.research
 
 **Checkpoint**: `pytest tests/research/test_spy_sentiment_response.py -v` PASSES.
 
@@ -159,9 +159,9 @@ passes only if ≥ 80% of eligible articles have price movement in the direction
 
 ## Phase N: Polish & Cross-Cutting Concerns
 
-- [ ] T034 [P] Run `ruff check src/ tests/` from repo root; fix all reported issues; re-run until clean
-- [ ] T035 [P] Post-task code review: verify all modules against Constitution Principle II — no magic numbers (check for bare `4680`, `5`, `180`, `0.05`, `80.0` — all must be named constants), descriptive names throughout, all public functions have type annotations, no function longer than ~20 lines without a clear reason
-- [ ] T036 Manually run quickstart.md Steps 1–8; confirm each step produces the expected output; update quickstart.md if any step is stale
+- [x] T034 [P] Run `ruff check src/ tests/` from repo root; fix all reported issues; re-run until clean
+- [x] T035 [P] Post-task code review: verify all modules against Constitution Principle II — no magic numbers (check for bare `4680`, `5`, `180`, `0.05`, `80.0` — all must be named constants), descriptive names throughout, all public functions have type annotations, no function longer than ~20 lines without a clear reason
+- [x] T036 Manually run quickstart.md Steps 1–8; confirm each step produces the expected output; update quickstart.md if any step is stale
 
 ---
 

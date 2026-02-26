@@ -1,7 +1,6 @@
 """Tests for src/file_writer.py — file I/O using tmp_data_dir fixture."""
 import csv
 from datetime import date
-from pathlib import Path
 
 import pytest
 
