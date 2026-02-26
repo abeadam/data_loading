@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git fetch:*)",
+      "Bash(bash:*)",
+      "Bash(cat:*)",
+      "Bash(python:*)",
+      "Bash(python3:*)",
+      "Bash(/Users/abeadam/dev/model/Stock-Model/.venv/bin/python:*)",
+      "Bash(/Users/abeadam/dev/model/Stock-Model/.venv/bin/pip list:*)",
+      "Bash(/Users/abeadam/dev/model/Stock-Market/.venv/bin/pip install:*)",
+      "Bash(/Users/abeadam/dev/model/Stock-Model/.venv/bin/pip install:*)",
+      "Bash(/Users/abeadam/dev/model/Stock-Model/.venv/bin/python3:*)",
+      "mcp__serena__find_symbol"
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+data_dir: /Users/abeadam/dev/data_loader/data
+ibkr_host: "127.0.0.1"
+ibkr_port: 7497
+
+instruments:
+  - symbol: SPY
+    sec_type: STK
+    exchange: SMART
+    currency: USD
+  - symbol: SPX
+    sec_type: IND
+    exchange: CBOE
+    currency: USD
+  - symbol: VIX
+    sec_type: IND
+    exchange: CBOE
+    currency: USD
+  - symbol: ES
+    sec_type: CONTFUT
+    exchange: CME
+    currency: USD
+  - symbol: VXM
+    sec_type: CONTFUT
+    exchange: CFE
+    currency: USD
+
+news:
+  provider_codes: "BZ"
+  spy_symbol: SPY
+  sentiment_backend: finbert  # or "vader" for faster, smaller install
