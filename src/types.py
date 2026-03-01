@@ -21,6 +21,7 @@ class AppConfig:
     news_provider_codes: str
     spy_symbol: str
     sentiment_backend: str
+    news_ibkr_client_id: int | None = None  # None → try default ID pool
 
 
 @dataclass(frozen=True)

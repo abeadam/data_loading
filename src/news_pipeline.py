@@ -5,7 +5,7 @@ from datetime import date
 from pathlib import Path
 
 from src.config_loader import load_config
-from src.ibkr_client import connect_to_ibkr, disconnect
+from src.ibkr_client import CLIENT_IDS_TO_TRY, connect_to_ibkr, disconnect
 from src.news_downloader import download_news_for_date, resolve_spy_con_id
 from src.sentiment_analyzer import aggregate_daily_sentiment, load_model, score_headlines
 from src.types import AppConfig, DailySentiment
@@ -53,26 +53,37 @@ def write_sentiment_csv(data_dir: Path, target_date: date, sentiment: DailySenti
     return path
 
 
-def run_news_pipeline(config: AppConfig) -> None:
+def run_news_pipeline(
+    config: AppConfig,
+    override_dates: list[date] | None = None,
+) -> None:
     """
     Orchestrate news download and sentiment scoring for all SPY dates.
 
+    If override_dates is provided, those dates are processed directly (useful for
+    debugging a specific date without requiring SPY bar files to exist).
+
+    Otherwise:
     1. Scan bars/SPY/ for existing CSV files → date list.
     2. Filter to dates without existing sentiment files.
     3. Connect to IBKR; resolve SPY conId once.
     4. Load sentiment model once.
     5. For each date: download headlines → score each article → aggregate → save files.
     """
-    spy_bar_dir = config.data_dir / "bars" / config.spy_symbol
-    available_dates = _find_bar_dates(spy_bar_dir, config.spy_symbol)
+    if override_dates is not None:
+        pending_dates = override_dates
+        print(f"Override mode: processing {len(pending_dates)} specified date(s).")
+    else:
+        spy_bar_dir = config.data_dir / "bars" / config.spy_symbol
+        available_dates = _find_bar_dates(spy_bar_dir, config.spy_symbol)
 
-    if not available_dates:
-        print(f"No {config.spy_symbol} bar files found in {spy_bar_dir}. Run downloader first.")
-        return
+        if not available_dates:
+            print(f"No {config.spy_symbol} bar files found in {spy_bar_dir}. Run downloader first.")
+            return
 
-    pending_dates = [d for d in available_dates if not _sentiment_exists(config.data_dir, d)]
-    print(f"Found {len(available_dates)} {config.spy_symbol} dates with bar data.")
-    print(f"Skipping {len(available_dates) - len(pending_dates)} dates with existing sentiment files.")
+        pending_dates = [d for d in available_dates if not _sentiment_exists(config.data_dir, d)]
+        print(f"Found {len(available_dates)} {config.spy_symbol} dates with bar data.")
+        print(f"Skipping {len(available_dates) - len(pending_dates)} dates with existing sentiment files.")
 
     if not pending_dates:
         print("All dates already processed.")
@@ -86,8 +97,13 @@ def run_news_pipeline(config: AppConfig) -> None:
         raise ValueError(f"spy_symbol '{config.spy_symbol}' not found in instruments config")
     spy_instrument = spy_instruments[0]
 
-    print(f"Connecting to IBKR on {config.ibkr_host}:{config.ibkr_port}...", flush=True)
-    client = connect_to_ibkr(config.ibkr_host, config.ibkr_port)
+    client_ids = (
+        [config.news_ibkr_client_id]
+        if config.news_ibkr_client_id is not None
+        else CLIENT_IDS_TO_TRY
+    )
+    print(f"Connecting to IBKR on {config.ibkr_host}:{config.ibkr_port} (client_id={client_ids[0] if len(client_ids) == 1 else client_ids})...", flush=True)
+    client = connect_to_ibkr(config.ibkr_host, config.ibkr_port, client_ids)
     print("Connected successfully.", flush=True)
 
     try:
@@ -185,7 +201,14 @@ if __name__ == "__main__":
         default=Path(__file__).parent / "config.yaml",
         help="Path to config.yaml",
     )
+    parser.add_argument(
+        "--date",
+        type=date.fromisoformat,
+        metavar="YYYY-MM-DD",
+        help="Process a specific date (bypasses SPY bar file scanning)",
+    )
     args = parser.parse_args()
 
     cfg = load_config(args.config)
-    run_news_pipeline(cfg)
+    override = [args.date] if args.date else None
+    run_news_pipeline(cfg, override_dates=override)
