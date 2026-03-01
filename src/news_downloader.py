@@ -1,12 +1,14 @@
 """Resolve SPY conId and download news headlines from IBKR for a date range."""
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 
 from ibapi.contract import Contract
 
 from src.ibkr_client import IBKRClient, fetch_historical_news, resolve_con_id
 from src.types import InstrumentConfig, NewsItem
 
-IBKR_NEWS_DATETIME_FORMAT = "%Y%m%d %H:%M:%S"
+# IBKR reqHistoricalNews requires dashes and a .0 suffix: "YYYY-MM-DD HH:MM:SS.0"
+# (not the same as reqHistoricalData which uses "YYYYMMDD HH:MM:SS")
+IBKR_NEWS_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 IBKR_NEWS_TIME_FORMAT = "%Y%m%d%H:%M:%S"
 
 
@@ -39,11 +41,12 @@ def download_news_for_date(
     Raises PermissionError if error code 10276 is returned (no news subscription).
     """
     start_dt = datetime(target_date.year, target_date.month, target_date.day, tzinfo=timezone.utc)
-    end_dt = datetime(target_date.year, target_date.month, target_date.day + 1, tzinfo=timezone.utc)
+    next_day = target_date + timedelta(days=1)
+    end_dt = datetime(next_day.year, next_day.month, next_day.day, tzinfo=timezone.utc)
 
-    # IBKR reqHistoricalNews format: "YYYYMMDD HH:MM:SS"
-    start_str = start_dt.strftime("%Y%m%d %H:%M:%S")
-    end_str = end_dt.strftime("%Y%m%d %H:%M:%S")
+    # IBKR reqHistoricalNews date format: "YYYY-MM-DD HH:MM:SS.0"
+    start_str = start_dt.strftime(IBKR_NEWS_DATETIME_FORMAT)
+    end_str = end_dt.strftime(IBKR_NEWS_DATETIME_FORMAT)
 
     raw_items = fetch_historical_news(
         client=client,

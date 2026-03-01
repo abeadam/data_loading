@@ -25,6 +25,7 @@ instruments:
     currency: USD
 
 news:
-  provider_codes: "BZ+DJNL+BRFUPDN+BRFG"
+  provider_codes: "DJNL+BRFUPDN+BRFG"
   spy_symbol: SPY
   sentiment_backend: finbert  # or "vader" for faster, smaller install
+  ibkr_client_id: 16  # separate from bar downloader (uses 1-5)

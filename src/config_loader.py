@@ -32,6 +32,9 @@ def load_config(config_path: Path) -> AppConfig:
             f"Must be one of: {sorted(VALID_SENTIMENT_BACKENDS)}"
         )
 
+    raw_client_id = news.get("ibkr_client_id")
+    news_ibkr_client_id = int(raw_client_id) if raw_client_id is not None else None
+
     return AppConfig(
         data_dir=data_dir,
         ibkr_host=ibkr_host,
@@ -40,6 +43,7 @@ def load_config(config_path: Path) -> AppConfig:
         news_provider_codes=news.get("provider_codes", "BZ"),
         spy_symbol=news.get("spy_symbol", "SPY"),
         sentiment_backend=sentiment_backend,
+        news_ibkr_client_id=news_ibkr_client_id,
     )
 
 

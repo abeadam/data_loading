@@ -69,9 +69,11 @@ class IBKRClient(EWrapper, EClient):
     def contractDetailsEnd(self, req_id: int) -> None:
         self._contract_details_done.set()
 
-    def error(self, req_id: int, error_code: int, error_string: str, advanced_order_reject_json: str = "") -> None:
-        # Code 2104/2106/2158 are informational (market data farm connected) — ignore
-        informational_codes = {2104, 2106, 2107, 2108, 2119, 2158}
+    def error(self, req_id: int, error_time: int, error_code: int, error_string: str, advanced_order_reject_json: str = "") -> None:
+        # These codes are warnings/informational — data is still returned normally.
+        # 2104/2106/2107/2108/2119/2158: market data farm connection status
+        # 2176: fractional share size rules (warning only — data still returned)
+        informational_codes = {2104, 2106, 2107, 2108, 2119, 2158, 2176}
         if error_code in informational_codes:
             return
         self._error_code = error_code

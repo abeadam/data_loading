@@ -7,7 +7,7 @@ from pathlib import Path
 from src.bar_downloader import download_day
 from src.config_loader import load_config
 from src.file_writer import file_exists, read_bars, write_bars
-from src.gap_checker import check_gaps
+from src.gap_checker import EXPECTED_REGULAR_SESSION_BARS, check_gaps
 from src.ibkr_client import connect_to_ibkr, disconnect
 from src.types import AppConfig, DayDownloadResult
 
@@ -136,7 +136,13 @@ def run_download(config: AppConfig) -> list[DayDownloadResult]:
                         ))
                         continue
 
-                    gap_report = check_gaps(daily_bars)
+                    # Futures trade ~24 hours — skip bar-count check; only check timestamp gaps.
+                    futures_sec_types = {"CONTFUT", "FUT"}
+                    expected_bar_count = (
+                        None if instrument.sec_type in futures_sec_types
+                        else EXPECTED_REGULAR_SESSION_BARS
+                    )
+                    gap_report = check_gaps(daily_bars, expected_bars=expected_bar_count)
                     if gap_report.has_gaps:
                         print(
                             f"  → Gap check: {len(gap_report.gaps)} gap(s) detected, "

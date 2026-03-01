@@ -2,15 +2,19 @@
 from src.types import DailyBars, GapInterval, GapReport
 
 EXPECTED_BAR_INTERVAL_SECONDS = 5
-EXPECTED_REGULAR_SESSION_BARS = 4680
+EXPECTED_REGULAR_SESSION_BARS = 4680  # Equities/indices: 6.5 RTH hours × 720 bars/hour
 
 
-def check_gaps(bars: DailyBars) -> GapReport:
+def check_gaps(bars: DailyBars, expected_bars: int | None = EXPECTED_REGULAR_SESSION_BARS) -> GapReport:
     """
     Detect gaps in a sorted 5-second bar sequence.
 
     A gap is any consecutive pair where the time difference exceeds 5 seconds.
-    The report also flags days with fewer bars than the expected 4,680.
+
+    expected_bars: expected bar count for this instrument session.
+        - EXPECTED_REGULAR_SESSION_BARS (4680) for equities and indices.
+        - None for futures (ES, VXM) — bar-count check is skipped since they
+          trade ~24 hours and the count varies by session.
     """
     sorted_bars = sorted(bars.bars, key=lambda b: b.timestamp)
     total_bars = len(sorted_bars)
@@ -27,7 +31,13 @@ def check_gaps(bars: DailyBars) -> GapReport:
                 missing_bars=missing_seconds // EXPECTED_BAR_INTERVAL_SECONDS,
             ))
 
-    has_gaps = bool(gaps) or total_bars < EXPECTED_REGULAR_SESSION_BARS
+    if expected_bars is None:
+        # Futures: only flag timestamp gaps, not bar count shortfalls
+        has_gaps = bool(gaps)
+        effective_expected = total_bars  # delta will always be 0
+    else:
+        has_gaps = bool(gaps) or total_bars < expected_bars
+        effective_expected = expected_bars
 
     return GapReport(
         symbol=bars.symbol,
@@ -35,6 +45,6 @@ def check_gaps(bars: DailyBars) -> GapReport:
         has_gaps=has_gaps,
         gaps=gaps,
         total_bars=total_bars,
-        expected_bars=EXPECTED_REGULAR_SESSION_BARS,
-        bar_count_delta=total_bars - EXPECTED_REGULAR_SESSION_BARS,
+        expected_bars=effective_expected,
+        bar_count_delta=total_bars - effective_expected,
     )

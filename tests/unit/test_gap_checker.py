@@ -157,6 +157,36 @@ class TestEmptyBars:
         assert report.gaps == []
 
 
+class TestFuturesMode:
+    def test_no_bar_count_flag_when_expected_none(self):
+        from src.gap_checker import check_gaps
+        from src.types import DailyBars
+
+        # Only 100 bars — would normally flag has_gaps, but not with expected_bars=None
+        bars = make_bars(100)
+        daily = DailyBars(symbol="ES", date=date(2024, 1, 2), bars=bars)
+        report = check_gaps(daily, expected_bars=None)
+
+        assert report.has_gaps is False
+        assert report.gaps == []
+        assert report.bar_count_delta == 0  # delta = total - effective_expected = 0
+
+    def test_timestamp_gaps_still_detected_in_futures_mode(self):
+        from src.gap_checker import check_gaps
+        from src.types import Bar, DailyBars
+
+        start = 1704196200
+        bars = [
+            Bar(timestamp=start, open=1.0, high=2.0, low=0.5, close=1.5, volume=10.0),
+            Bar(timestamp=start + 30, open=1.0, high=2.0, low=0.5, close=1.5, volume=10.0),
+        ]
+        daily = DailyBars(symbol="ES", date=date(2024, 1, 2), bars=bars)
+        report = check_gaps(daily, expected_bars=None)
+
+        assert report.has_gaps is True
+        assert len(report.gaps) == 1
+
+
 class TestSortingBehavior:
     def test_out_of_order_bars_sorted_before_checking(self):
         from src.gap_checker import check_gaps
